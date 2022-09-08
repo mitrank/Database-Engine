@@ -41,6 +41,7 @@ class Row {
         uint32_t id;
         string username;
         string email;
+        // Row() : id(0), username(""), email("") {}
 };
 
 const uint32_t ID_SIZE = size_of_attribute(Row, id);
@@ -84,7 +85,7 @@ void serialize_row(Row source, void* destination) {
     memcpy(&destination + EMAIL_OFFSET, &source.email, EMAIL_SIZE);
 }
 
-void deserialize_row(void* source, Row& destination) {
+void deserialize_row(void* source, Row destination) {
     memcpy(&destination.id, &source + ID_OFFSET, ID_SIZE);
     memcpy(&destination.username, &source + USERNAME_OFFSET, USERNAME_SIZE);
     memcpy(&destination.email, &source + EMAIL_OFFSET, EMAIL_SIZE);
@@ -94,7 +95,7 @@ void* row_slot(Table table, uint32_t row_num) {
     uint32_t page_num = row_num / ROWS_PER_PAGE;
     void* page = table.pages[page_num];
     if(page == NULL) 
-        page = table.pages[page_num];
+        page = table.pages[page_num] = malloc(PAGE_SIZE);
     uint32_t row_offset = row_num % ROWS_PER_PAGE;
     uint32_t byte_offset = row_offset % ROW_SIZE;
     return &page + byte_offset;

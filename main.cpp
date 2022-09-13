@@ -80,17 +80,18 @@ void free_table(Table& table) {
 }
 
 void serialize_row(Row source, void* destination) {
-    cout << "here" << endl;
-    memcpy((char*)destination + ID_OFFSET, &source.id, ID_SIZE);
-    memcpy((char*)destination + USERNAME_OFFSET, &source.username, USERNAME_SIZE);
-    memcpy((char*)destination + EMAIL_OFFSET, &source.email, EMAIL_SIZE);
-    cout << "now" << endl;
+    memcpy(&destination + ID_OFFSET, &source.id, ID_SIZE);
+    memcpy(&destination + USERNAME_OFFSET, &source.username, USERNAME_SIZE);
+    memcpy(&destination + EMAIL_OFFSET, &source.email, EMAIL_SIZE);
 }
 
 void deserialize_row(void* source, Row destination) {
-    memcpy(&destination.id, (char*)source + ID_OFFSET, ID_SIZE);
-    memcpy(&destination.username, (char*)source + USERNAME_OFFSET, USERNAME_SIZE);
-    memcpy(&destination.email, (char*)source + EMAIL_OFFSET, EMAIL_SIZE);
+    cout << "here" << endl;
+    memcpy(&destination.id, &source + ID_OFFSET, ID_SIZE);
+    memcpy(&destination.username, &source + USERNAME_OFFSET, USERNAME_SIZE);
+    memcpy(&destination.email, &source + EMAIL_OFFSET, EMAIL_SIZE);
+    cout << "now" << endl;
+    cout << destination.id << ", " << destination.username << ", " << destination.email << endl;
 }
 
 void* row_slot(Table table, uint32_t row_num) {
@@ -104,6 +105,7 @@ void* row_slot(Table table, uint32_t row_num) {
 }
 
 void print_row(Row row) {
+    cout << "printing";
     cout << row.id << ", " << row.username << ", " << row.email << endl;
 }
 
@@ -180,6 +182,7 @@ ExecuteResult execute_select(Statement statement, Table table) {
     Row row;
     for(uint32_t i = 0; i < table.num_rows; i++) {
         deserialize_row(row_slot(table, i), row);
+        cout << "gotoprint";
         print_row(row);
     }
     return EXECUTE_SUCCESS;

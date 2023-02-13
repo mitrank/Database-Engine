@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
-#include <cstring>
 #include <sstream>
 #include <vector>
+#include <fstream>
 #include <sys/types.h>
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute)
 using namespace std;
@@ -79,19 +79,30 @@ void free_table(Table& table) {
     delete &table;
 }
 
+ofstream file("data.txt", ios_base::trunc);
+
 void serialize_row(Row source, void* destination) {
-    memcpy(&destination + ID_OFFSET, &source.id, ID_SIZE);
-    memcpy(&destination + USERNAME_OFFSET, &source.username, USERNAME_SIZE);
-    memcpy(&destination + EMAIL_OFFSET, &source.email, EMAIL_SIZE);
+    ofstream outFile("data.txt", ios_base::app);
+    if (outFile.is_open()) {
+        outFile << source.id << ","<< source.username << "," << source.email << "," << endl;
+        outFile.close();
+    }
 }
 
-void deserialize_row(void* source, Row destination) {
-    cout << "here" << endl;
-    memcpy(&destination.id, &source + ID_OFFSET, ID_SIZE);
-    memcpy(&destination.username, &source + USERNAME_OFFSET, USERNAME_SIZE);
-    memcpy(&destination.email, &source + EMAIL_OFFSET, EMAIL_SIZE);
-    cout << "now" << endl;
-    cout << destination.id << ", " << destination.username << ", " << destination.email << endl;
+void deserialize_row(void* source, Row &destination, vector<string> &vec) {
+    string temp;
+    ifstream inFile("data.txt");
+    if (inFile.is_open()) {
+        while (getline(inFile, temp, ',')) {
+            vec.push_back(temp);
+        }
+        inFile.close();
+    }
+    else cout << "Unable to open the file";
+    destination.id = stoi(vec[0]);
+    destination.username = vec[1];
+    destination.email = vec[2];
+    vec.erase(vec.begin(), vec.begin() + 3);
 }
 
 void* row_slot(Table table, uint32_t row_num) {
@@ -105,7 +116,6 @@ void* row_slot(Table table, uint32_t row_num) {
 }
 
 void print_row(Row row) {
-    cout << "printing";
     cout << row.id << ", " << row.username << ", " << row.email << endl;
 }
 
@@ -180,9 +190,9 @@ ExecuteResult execute_insert(Statement statement, Table& table) {
 
 ExecuteResult execute_select(Statement statement, Table table) {
     Row row;
+    vector<string> vec;
     for(uint32_t i = 0; i < table.num_rows; i++) {
-        deserialize_row(row_slot(table, i), row);
-        cout << "gotoprint";
+        deserialize_row(row_slot(table, i), row, vec);
         print_row(row);
     }
     return EXECUTE_SUCCESS;
